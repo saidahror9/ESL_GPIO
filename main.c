@@ -53,53 +53,76 @@
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 
-#define LED1_G         NRF_GPIO_PIN_MAP(0,6)
-#define LED2_R         NRF_GPIO_PIN_MAP(0,8)
-#define LED2_G         NRF_GPIO_PIN_MAP(1,9)
-#define LED2_B         NRF_GPIO_PIN_MAP(0,12)
+#define LED1_G NRF_GPIO_PIN_MAP(0, 6)
+#define LED2_R NRF_GPIO_PIN_MAP(0, 8)
+#define LED2_G NRF_GPIO_PIN_MAP(1, 9)
+#define LED2_B NRF_GPIO_PIN_MAP(0, 12)
+
+#define BUTTON_1 NRF_GPIO_PIN_MAP(1, 6)
 
 #define LED_COUNT 4
 
-static const uint32_t leds[LED_COUNT] ={LED1_G, LED2_R, LED2_G, LED2_B};
+#define button_pressed 0
 
+static const uint32_t leds[LED_COUNT] = {LED1_G, LED2_R, LED2_G, LED2_B};
 
-/**
- * @brief Function for application main entry.
- */
-void led_init(){
-    for (int i = 0; i < LED_COUNT; i++){
+void led_init(void)
+{
+    for (int i = 0; i < LED_COUNT; i++)
+    {
         nrf_gpio_cfg_output(leds[i]);
         nrf_gpio_pin_write(leds[i], 1);
     }
 }
 
-void led_on(int i){
+void button_init(void)
+{
+    nrf_gpio_cfg_input(BUTTON_1, NRF_GPIO_PIN_PULLUP);
+}
+
+void led_on(int i)
+{
     nrf_gpio_pin_write(leds[i], 0);
 }
 
-void led_off(int i){
+void led_off(int i)
+{
     nrf_gpio_pin_write(leds[i], 1);
+}
+
+void wait_pressed(int ms)
+{
+    int waited = 0;
+    while (waited < ms)
+    {
+        if (nrf_gpio_pin_read(BUTTON_1) == button_pressed)
+        {
+            waited += 10;
+        }
+        nrf_delay_ms(10);
+    }
 }
 
 int main(void)
 {
 
     led_init();
+    button_init();
 
     int board_Id[] = {7, 1, 9, 8};
 
-    while(true){
-    for(int i = 0; i < LED_COUNT; i++){
-        for(int j = 0; j < board_Id[i]; j++){
-        led_on(i);
-        nrf_delay_ms(1000);
-        led_off(i);
-        nrf_delay_ms(1000);
+    while (true)
+    {
+
+        for (int i = 0; i < LED_COUNT; i++)
+        {
+            for (int j = 0; j < board_Id[i]; j++)
+            {
+                wait_pressed(500);
+                led_on(i);
+                wait_pressed(500);
+                led_off(i);
+            }
         }
-        
     }
 }
-
-
-}
-
